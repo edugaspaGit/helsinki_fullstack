@@ -7,8 +7,7 @@ const Button = ({ onClick, title }) => {
 const MostVoted = ({ anecdotes, votes }) => {
   const maxVote = Math.max(...votes);
   const position = votes.indexOf(maxVote);
-  console.log(votes);
-
+  
   if (maxVote === 0) return <div>No votes received yet.</div>;
   return <div>{anecdotes[position]}</div>;
 };
