@@ -1,10 +1,19 @@
 import { useState } from "react";
-import Button from "./Button";
-import MostVoted from "./MostVoted";
 
-function App() {
-  const [selected, setSelected] = useState(0);
+const Button = ({ onClick, title }) => {
+  return <button onClick={onClick}>{title}</button>;
+};
 
+const MostVoted = ({ anecdotes, votes }) => {
+  const maxVote = Math.max(...votes);
+  const position = votes.indexOf(maxVote);
+  console.log(votes);
+
+  if (maxVote === 0) return <div>No votes received yet.</div>;
+  return <div>{anecdotes[position]}</div>;
+};
+
+const App = () => {
   const anecdotes = [
     "If it hurts, do it more often.",
     "Adding manpower to a late software project makes it later!",
@@ -15,34 +24,31 @@ function App() {
     "Programming without an extremely heavy use of console.log is same as if a doctor would refuse to use x-rays or blood tests when diagnosing patients.",
     "The only way to go fast, is to go well.",
   ];
-
-  const [votes, setVotes] = useState(Array(anecdotes.length).fill(0));
-  const nrOfAnecdotes = anecdotes.length - 1;
+  
+  const [selected, setSelected] = useState(0);
+  const [votes, setVotes] = useState(Array(8).fill(0));
 
   const handleVote = () => {
     const votesCopy = [...votes];
-    votesCopy[selected] += 1;        
+    votesCopy[selected] += 1;
     setVotes(votesCopy);
   };
 
-  const handleSelected = (max) => {
-    const position = Math.floor(Math.random() * max);
-    setSelected(position);
+  const handleSelected = () => {
+    const randomNumber = Math.floor(Math.random() * 8);
+    setSelected(randomNumber);
   };
 
-   return (
+  return (
     <div>
-      <h2>Anecdote of the day</h2>
-      <p>{anecdotes[selected]}</p>
-      <p>
-        <Button onClick={handleVote} text="Vote" />
-        <Button
-          onClick={() => handleSelected(nrOfAnecdotes)}
-          text="Next anecdote"
-        />
-      </p>      
+      <h2>Anecdote of the Day</h2>
+      <div>{anecdotes[selected]}</div>
+      <p />
+      <Button onClick={handleVote} title="Vote" />
+      <Button onClick={handleSelected} title="Next Anecdote" />
+      <h2>Anecdote with most votes</h2>
       <MostVoted anecdotes={anecdotes} votes={votes} />
     </div>
   );
-}
+};
 export default App;
