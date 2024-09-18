@@ -1,125 +1,126 @@
 import { useState } from "react";
 
+const Filter = ({ value, onChange }) => {
+  return (
+    <div>
+      Filter shown with: <input value={value} onChange={onChange} />
+    </div>
+  );
+};
+const Input = ({ text, value, onChange }) => {
+  return (
+    <div>
+      {text}
+      <input value={value} onChange={onChange} />
+    </div>
+  );
+};
+const Button = ({ text, type }) => {
+  return (
+    <div>
+      <button type={type}>{text}</button>
+    </div>
+  );
+};
+
+const PersonForm = ({ onSubmit, input1, input2, button1 }) => {
+  return (
+    <form onSubmit={onSubmit}>
+      <Input
+        text={input1.text}
+        value={input1.value}
+        onChange={input1.onChange}
+      />
+      <Input
+        text={input2.text}
+        value={input2.value}
+        onChange={input2.onChange}
+      />
+      <Button text={button1.text} type={button1.type} />
+    </form>
+  );
+};
+const Person = ({ person }) => {
+  return (
+    <div>
+      {person.name} {person.number}
+    </div>
+  );
+};
+const Persons = ({ persons }) => {
+  return (
+    <div>
+      {persons.map((person) => (
+        <Person key={person.name} person={person} />
+      ))}
+    </div>
+  );
+};
+
 const App = () => {
-  const [persons, setPersons] = useState([{ name: "Simón Gasparotto" }]);
+  const phonebook = [
+    { name: "Simón Gasparotto", number: "341-2161088" },
+    { name: "Arto Hellas", number: "040-123456", id: 1 },
+    { name: "Ada Lovelace", number: "39-44-5323523", id: 2 },
+    { name: "Dan Abramov", number: "12-43-234345", id: 3 },
+    { name: "Mary Poppendieck", number: "39-23-6423122", id: 4 },
+  ];
+  const [allPersons, setAllPersons] = useState(phonebook);
+  const [persons, setPersons] = useState(phonebook);
   const [newName, setNewName] = useState("");
+  const [newNumber, setNewNumber] = useState("");
+  const [newFilter, setNewFilter] = useState("");
 
   const handleAddContact = (event) => {
     event.preventDefault();
-    const personObject = { name: newName };
-    if (persons.some((person) => person.name === newName)) {
+    const personObject = { name: newName, number: newNumber };
+    if (allPersons.some((person) => person.name === newName)) {
       alert(`${newName} is already added to the phonebook.`);
     } else {
-      setPersons(persons.concat(personObject));
+      setAllPersons(allPersons.concat(personObject));
+      setPersons(allPersons.concat(personObject));
     }
   };
 
   const handleChangeName = (event) => {
     setNewName(event.target.value);
   };
+  const handleChangeNumber = (event) => {
+    setNewNumber(event.target.value);
+  };
+  const handleFilter = (event) => {
+    const filter = event.target.value;
+    setNewFilter(filter);
+    const personsFiltered = allPersons.filter((person) =>
+      person.name.toLowerCase().includes(filter.toLowerCase())
+    );
+    setPersons(personsFiltered);
+  };
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <form onSubmit={handleAddContact}>
-        <div>
-          Name: <input value={newName} onChange={handleChangeName} />
-        </div>
-        <div>
-          <button type="submit">Add</button>
-        </div>
-      </form>
+      <Filter value={newFilter} onChange={handleFilter} />
+      <h2>Add a New</h2>
+      <PersonForm
+        onSubmit={handleAddContact}
+        input1={{
+          text: "Name:",
+          value: newName,
+          onChange: handleChangeName,
+        }}
+        input2={{
+          text: "Number:",
+          value: newNumber,
+          onChange: handleChangeNumber,
+        }}
+        button1={{ type: "submit", text: "Add" }}
+      />
+
       <h2>Numbers</h2>
-      <div>
-        {persons.map((person) => (
-          <div key={person.name}>{person.name}</div>
-        ))}
-      </div>
+      <Persons persons={persons} />
     </div>
   );
 };
 
 export default App;
-
-// import { useState } from "react";
-
-// function App() {
-//   const [persons, setPersons] = useState([
-//     { name: "Arto Hellas", phoneNr: "0303456-0303456" },
-//     { name: "Edu Gaspa", phoneNr: "0303456-0303456" },
-//     { name: "Viyo Le", phoneNr: "0303456-0303456" },
-//     { name: "Simón Pedro", phoneNr: "0303456-0303456" },
-//   ]);
-
-//   const [filteredPersons, setFilteredPersons] = useState(persons);
-
-//   const [newName, setNewName] = useState("");
-//   const [newPhoneNr, setNewPhoneNr] = useState("");
-//   const [nameFilter, setNameFilter] = useState("");
-
-//   const handleNameChange = (event) => {
-//     setNewName(event.target.value);
-//   };
-
-//   const handlePhoneNrChange = (event) => {
-//     setNewPhoneNr(event.target.value);
-//   };
-
-//   const handleFilterChange = (event) => {
-//     const filter = event.target.value;
-//     setNameFilter(filter);
-
-//     const personsFiltered =
-//       filter.length === 0
-//         ? persons
-//         : persons.filter((person) =>
-//             person.name.toLowerCase().includes(filter.toLowerCase())
-//           );
-
-//     setFilteredPersons(personsFiltered);
-//   };
-
-//   const addPerson = (event) => {
-//     event.preventDefault();
-//     if (!persons.some((person) => person.name === newName)) {
-//       const personObject = { name: newName, phoneNr: newPhoneNr };
-//       setPersons(persons.concat(personObject));
-//     } else {
-//       alert(`${newName} is already added to the phonebook`);
-//     }
-//     setNewName("");
-//     setNewPhoneNr("");
-//   };
-
-//   return (
-//     <div>
-//       <h2>Phonebook</h2>
-//       <div>
-//         <input value={nameFilter} onChange={handleFilterChange} />
-//       </div>
-//       <h2>New Contact</h2>
-//       <form onSubmit={addPerson}>
-//         <div>
-//           Name: <input value={newName} onChange={handleNameChange} />
-//         </div>
-//         <div>
-//           Phone Number:
-//           <input value={newPhoneNr} onChange={handlePhoneNrChange} />
-//         </div>
-//         <div>
-//           <button type="submit">Add</button>
-//         </div>
-//       </form>
-//       <h2>Numbers</h2>
-//       <div>
-//         {filteredPersons.map((person) => (
-//           <li key={person.name}>
-//             {person.name} {person.phoneNr}
-//           </li>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default App;
