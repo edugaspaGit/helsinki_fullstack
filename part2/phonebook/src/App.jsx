@@ -1,63 +1,21 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import personService from "../services/persons";
+import PersonForm from "./components/PersonForm";
+import Filter from "./components/Filter";
+import Persons from "./components/Persons";
+import "./index.css";
 
-const Filter = ({ value, onChange }) => {
-  return (
-    <div>
-      Filter shown with: <input value={value} onChange={onChange} />
-    </div>
-  );
+const SuccessMessage = ({ message }) => {
+  if (message === null) {
+    return null;
+  }
+  return <div className="success">{message}</div>;
 };
-const Input = ({ text, value, onChange }) => {
-  return (
-    <div>
-      {text}
-      <input value={value} onChange={onChange} />
-    </div>
-  );
-};
-const Button = ({ text, type }) => {
-  return (
-    <div>
-      <button type={type}>{text}</button>
-    </div>
-  );
-};
-
-const PersonForm = ({ onSubmit, input1, input2, button1 }) => {
-  return (
-    <form onSubmit={onSubmit}>
-      <Input
-        text={input1.text}
-        value={input1.value}
-        onChange={input1.onChange}
-      />
-      <Input
-        text={input2.text}
-        value={input2.value}
-        onChange={input2.onChange}
-      />
-      <Button text={button1.text} type={button1.type} />
-    </form>
-  );
-};
-const Person = ({ person, onClick }) => {
-  return (
-    <div>
-      {person.name} {person.number}
-      <button onClick={() => onClick(person)}>delete</button>
-    </div>
-  );
-};
-const Persons = ({ persons, deleteContact }) => {
-  return (
-    <div>
-      {persons.map((person) => (
-        <Person key={person.name} person={person} onClick={deleteContact} />
-      ))}
-    </div>
-  );
+const ErrorMessage = ({ message }) => {
+  if (message === null) {
+    return null;
+  }
+  return <div className="error">{message}</div>;
 };
 
 const App = () => {
@@ -68,30 +26,15 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [newFilter, setNewFilter] = useState("");
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     personService.getAllPersons().then((initialPersons) => {
       setAllPersons(initialPersons);
       setPersons(initialPersons);
     });
-    // axios.get("http://localhost:3001/persons").then((response) => {
-    //   setAllPersons(response.data);
-    //   setPersons(response.data);
-    // });
   }, []);
-
-  // const handleAddContact = (event) => {
-  //   event.preventDefault();
-  //   const personObject = { name: newName, number: newNumber };
-
-  //   if (allPersons.some((person) => person.name === newName)) {
-  //     alert(`${newName} is already added to the phonebook.`);
-  //   } else {
-  //     personService.createPerson(personObject).then((createdPerson) => {
-  //       setAllPersons(allPersons.concat(createdPerson));
-  //       setPersons(allPersons.concat(createdPerson));
-  //     });
-  // };
 
   const handleUpdateContacts = (event) => {
     event.preventDefault();
@@ -105,17 +48,35 @@ const App = () => {
           `${personObject.name} is already added to the phonebook, replace the old number with a new one?`
         )
       ) {
-        personService.updatePerson(personObject).then((updatedPerson) => {
-          const updatedPersons = persons.map((p) =>
-            p.id === updatedPerson.id ? updatedPerson : p
-          );
-          setPersons(updatedPersons);
-        });
+        personService
+          .updatePerson(personObject)
+          .then((updatedPerson) => {
+            setSuccessMessage(`Updated: ${updatedPerson.name}`);
+            setTimeout(() => {
+              setSuccessMessage(null);
+            }, 5000);
+            const updatedPersons = persons.map((p) =>
+              p.id === updatedPerson.id ? updatedPerson : p
+            );
+            setPersons(updatedPersons);
+          })
+          .catch((error) => {
+            setErrorMessage(
+              `Information of ${personObject.name} has already been removed from the server.`
+            );
+            setTimeout(() => {
+              setErrorMessage(null);
+            }, 5000);
+          });
       }
-      // Create Person      
+      // Create Person
     } else {
       personObject = { name: newName, number: newNumber };
       personService.createPerson(personObject).then((createdPerson) => {
+        setSuccessMessage(`Added: ${createdPerson.name}`);
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 5000);
         setAllPersons(allPersons.concat(createdPerson));
         setPersons(allPersons.concat(createdPerson));
       });
@@ -123,13 +84,27 @@ const App = () => {
   };
   const handleDeleteContact = (person) => {
     if (window.confirm(`Delete ${person.name}?`)) {
-      personService.deletePerson(person.id).then((deletedPerson) => {
-        const filteredPersons = persons.filter(
-          (p) => p.id !== deletedPerson.id
-        );
-        setAllPersons(filteredPersons);
-        setPersons(filteredPersons);
-      });
+      personService
+        .deletePerson(person.id)
+        .then((deletedPerson) => {
+          setSuccessMessage(`Deleted: ${deletedPerson.name}`);
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 5000);
+          const filteredPersons = persons.filter(
+            (p) => p.id !== deletedPerson.id
+          );
+          setAllPersons(filteredPersons);
+          setPersons(filteredPersons);
+        })
+        .catch((error) => {
+          setErrorMessage(
+            `Information of ${person.name} has already been removed from the server.`
+          );
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 5000);
+        });
     }
   };
 
@@ -141,8 +116,6 @@ const App = () => {
   };
   const handleFilter = (event) => {
     const filter = event.target.value;
-    console.log(allPersons, filter);
-
     setNewFilter(filter);
     const personsFiltered = allPersons.filter((person) =>
       person.name.toLowerCase().includes(filter.toLowerCase())
@@ -153,6 +126,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <SuccessMessage message={successMessage} />
+      <ErrorMessage message={errorMessage} />
       <Filter value={newFilter} onChange={handleFilter} />
       <h2>Add a New</h2>
       <PersonForm
