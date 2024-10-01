@@ -61,6 +61,12 @@ const App = () => {
             setPersons(updatedPersons);
           })
           .catch((error) => {
+            const filteredPersons = allPersons.filter(
+              (p) => p.id !== personObject.id
+            );
+            setAllPersons(filteredPersons);
+            setPersons(filteredPersons);
+            setNewFilter("");
             setErrorMessage(
               `Information of ${personObject.name} has already been removed from the server.`
             );
@@ -73,12 +79,13 @@ const App = () => {
     } else {
       personObject = { name: newName, number: newNumber };
       personService.createPerson(personObject).then((createdPerson) => {
+        setAllPersons(allPersons.concat(createdPerson));
+        setPersons(allPersons.concat(createdPerson));
+        setNewFilter("");
         setSuccessMessage(`Added: ${createdPerson.name}`);
         setTimeout(() => {
           setSuccessMessage(null);
         }, 5000);
-        setAllPersons(allPersons.concat(createdPerson));
-        setPersons(allPersons.concat(createdPerson));
       });
     }
   };
@@ -87,17 +94,34 @@ const App = () => {
       personService
         .deletePerson(person.id)
         .then((deletedPerson) => {
+          let filteredPersons = allPersons.filter(
+            (p) => p.id !== deletedPerson.id
+          );
+          setAllPersons(filteredPersons);
+
+          filteredPersons = allPersons.filter(
+            (p) =>
+              p.id !== deletedPerson.id &&
+              p.name.toLowerCase().includes(newFilter.toLowerCase())
+          );
+          setPersons(filteredPersons);
+
           setSuccessMessage(`Deleted: ${deletedPerson.name}`);
           setTimeout(() => {
             setSuccessMessage(null);
           }, 5000);
-          const filteredPersons = persons.filter(
-            (p) => p.id !== deletedPerson.id
-          );
-          setAllPersons(filteredPersons);
-          setPersons(filteredPersons);
         })
         .catch((error) => {
+          let filteredPersons = allPersons.filter((p) => p.id !== person.id);
+          setAllPersons(filteredPersons);
+
+          filteredPersons = allPersons.filter(
+            (p) =>
+              p.id !== person.id &&
+              p.name.toLowerCase().includes(newFilter.toLowerCase())
+          );
+          setPersons(filteredPersons);
+
           setErrorMessage(
             `Information of ${person.name} has already been removed from the server.`
           );
@@ -117,10 +141,10 @@ const App = () => {
   const handleFilter = (event) => {
     const filter = event.target.value;
     setNewFilter(filter);
-    const personsFiltered = allPersons.filter((person) =>
+    const filteredPersons = allPersons.filter((person) =>
       person.name.toLowerCase().includes(filter.toLowerCase())
     );
-    setPersons(personsFiltered);
+    setPersons(filteredPersons);
   };
 
   return (
