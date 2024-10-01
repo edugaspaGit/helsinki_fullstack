@@ -12,8 +12,6 @@ const Country = ({ country }) => {
       )
       .then((response) => {
         setWeather(response.data);
-        let weat = response.data;
-        console.log(response.data);
       })
       .catch((error) => {
         console.log(error);
